@@ -1,0 +1,15 @@
+RewriteEngine On
+
+# if localhost, use baseurl /projetos/whatsapp/public to rewrite if not a file or directory
+# if not localhost, use baseurl / to rewrite if not a file or directory
+
+RewriteCond %{HTTP_HOST} ^localhost$
+# RewriteBase /projetos/whatsapp/public/
+
+# RewriteCond %{HTTP_HOST} !^localhost$
+# RewriteBase /
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^(.*)$ index.php? [QSA,L]
