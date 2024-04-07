@@ -39,7 +39,7 @@ class AppController
     public function addRoute($method, $uri, $callback, $middleware = [])
     {
         $uri = rtrim($this->prefix . rtrim($uri, "/"), "/");
-        $method = strtoupper($method);
+        $method = mb_strtoupper($method, "UTF-8");
         if (!in_array($method, ["GET", "POST", "PUT", "DELETE"])) throw new \Exception("Method not allowed", 405);
 
         if (!is_callable($callback) && !is_string($callback)) throw new \Exception("Callback must be a function or a controller", 500);
@@ -76,7 +76,7 @@ class AppController
         $params = func_get_args();
         $methods = array_shift($params);
         foreach ($methods as $method) :
-            $this->addRoute(strtoupper($method), ...$params);
+            $this->addRoute($method, ...$params);
         endforeach;
     }
 
@@ -108,7 +108,7 @@ class AppController
     {
         try {
             $uri = $this->uri;
-            $method = strtoupper($_SERVER["REQUEST_METHOD"]);
+            $method = mb_strtoupper($_SERVER["REQUEST_METHOD"], "UTF-8");
 
             if (isset($this->config["useCors"]) && $this->config["useCors"] === true) :
                 if ($method === "OPTIONS") :
@@ -165,8 +165,7 @@ class AppController
             elseif (is_string($callback)) :
                 $callback = explode("@", $callback);
                 $controller = $callback[0];
-                $controller_method = $callback[1];
-                if (!$controller_method) $controller_method = strtolower($this->method);
+                $controller_method = (isset($callback[1])) ? mb_strtolower($callback[1], "UTF-8") : $method;
 
                 if (!class_exists($controller)) throw new \Exception("Controller not found", 404);
                 if (!method_exists($controller, $controller_method)) :
@@ -175,7 +174,7 @@ class AppController
                 endif;
 
                 $controller = new $controller();
-                $controller->$method($this->request, $this->response, $args);
+                $controller->$controller_method($this->request, $this->response, $args);
             endif;
         } catch (\Exception $e) {
             $this->response->withError($e->getCode(), $e->getMessage());
