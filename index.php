@@ -16,10 +16,7 @@ $route_config["useCors"] = true;
 
 if (strpos($request->hostname, "localhost") !== false) $route_config["baseUri"] = dirname($_SERVER["PHP_SELF"]);
 
-$response->withJson(["config" => $route_config]);
-
 $app = new App(new Request(), new Response(), $route_config ?? []);
-
 
 function withToken($app)
 {
@@ -31,5 +28,10 @@ $app->get("/", function ($req, $res, $args) {
     $res->withJson(["message" => "Hello, World!"]);
 });
 
+$app->get("/authenticated", function ($req, $res, $args) {
+    $token = $req->headers["Authorization"] ?? $req->getParams("token") ?? null;
+
+    return $res->withJson(["message" => "Authenticated with {$token}"]);
+}, ["withToken"]);
 
 $app->run();
