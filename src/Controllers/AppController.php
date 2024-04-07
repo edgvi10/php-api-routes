@@ -62,6 +62,24 @@ class AppController
         return $this;
     }
 
+    public function all()
+    {
+        $params = func_get_args();
+        $this->addRoute("GET", ...$params);
+        $this->addRoute("POST", ...$params);
+        $this->addRoute("PUT", ...$params);
+        $this->addRoute("DELETE", ...$params);
+    }
+
+    public function map()
+    {
+        $params = func_get_args();
+        $methods = array_shift($params);
+        foreach ($methods as $method) :
+            $this->addRoute(strtoupper($method), ...$params);
+        endforeach;
+    }
+
     public function get()
     {
         $params = func_get_args();
@@ -147,10 +165,14 @@ class AppController
             elseif (is_string($callback)) :
                 $callback = explode("@", $callback);
                 $controller = $callback[0];
-                $method = $callback[1];
+                $controller_method = $callback[1];
+                if (!$controller_method) $controller_method = strtolower($this->method);
 
                 if (!class_exists($controller)) throw new \Exception("Controller not found", 404);
-                if (!method_exists($controller, $method)) throw new \Exception("Method not found", 404);
+                if (!method_exists($controller, $controller_method)) :
+                    if (!method_exists($controller, "handler")) throw new \Exception("Method not found", 404);
+                    $controller_method = "handler";
+                endif;
 
                 $controller = new $controller();
                 $controller->$method($this->request, $this->response, $args);
